@@ -3,7 +3,7 @@ import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import { TasksModule } from './tasks/tasks.module';
+import { BoardModule } from './boards/board.module';
 
 @Module({
   imports: [
@@ -11,7 +11,7 @@ import { TasksModule } from './tasks/tasks.module';
     UserModule,
     PrismaModule,
     AuthModule,
-    TasksModule,
+    BoardModule,
   ],
   controllers: [],
   providers: [],
