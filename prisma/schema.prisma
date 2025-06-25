@@ -26,6 +26,8 @@ model User {
   lastName  String?
 
   Boards Board[]
+  Lists  List[]
+  Cards  Card[]
 
   @@map("users")
 }
@@ -40,5 +42,48 @@ model Board {
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
+  Lists List[]
+
   @@map("boards")
+}
+
+model List {
+  id        Int      @id @default(autoincrement())
+  createAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title String
+
+  Cards Card[]
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id])
+
+  @@map("lists")
+}
+
+model Card {
+  id        Int      @id @default(autoincrement())
+  createAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title       String?
+  description String?
+  checklist   String?
+  members     String?
+  labels      String?
+  location    String?
+  comments    String?
+  data        DateTime?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  listId Int
+  list   List @relation(fields: [listId], references: [id])
+
+  @@map("cards")
 }

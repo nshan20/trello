@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { BoardDto } from './dto';
 import { GetUser } from '../auth/decorator';
-import { User } from '../../generated/prisma';
 import { JwtGuard } from '../auth/guard';
 import { BoardService } from './board.service';
 
@@ -32,6 +31,7 @@ export class BoardController {
   ) {
     return this.boardService.getBoardById(userId, boardId);
   }
+
 
   @Post()
   createBoard(@Body() dto: BoardDto, @GetUser('id') userId: number) {

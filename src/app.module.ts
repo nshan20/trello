@@ -4,6 +4,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { BoardModule } from './boards/board.module';
+import { ListModule } from './list/list.module';
+import { CardController } from './card/card.controller';
+import { CardService } from './card/card.service';
+import { CardModule } from './card/card.module';
 
 @Module({
   imports: [
@@ -12,8 +16,10 @@ import { BoardModule } from './boards/board.module';
     PrismaModule,
     AuthModule,
     BoardModule,
+    ListModule,
+    CardModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [CardController],
+  providers: [CardService],
 })
 export class AppModule {}
