@@ -40,7 +40,7 @@ model Board {
   title String
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   Lists List[]
 
@@ -57,10 +57,10 @@ model List {
   Cards Card[]
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   boardId Int
-  board   Board @relation(fields: [boardId], references: [id])
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   @@map("lists")
 }
@@ -80,10 +80,10 @@ model Card {
   data        DateTime?
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   listId Int
-  list   List @relation(fields: [listId], references: [id])
+  list   List @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   @@map("cards")
 }

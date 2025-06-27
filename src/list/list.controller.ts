@@ -19,7 +19,7 @@ import { ListDto } from './dto';
 export class ListController {
   constructor(private listService: ListService) {}
 
-  @Get(':id')
+  @Get('boardId/:id')
   getListsByBoardId(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) boardId: number,
@@ -27,7 +27,7 @@ export class ListController {
     return this.listService.getListByBoardId(userId, boardId);
   }
 
-  @Post('board/:id')
+  @Post('boardId/:id')
   createList(
     @Body() dto: ListDto,
     @GetUser('id') userId: number,
