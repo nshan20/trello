@@ -13,18 +13,33 @@ import { ListService } from './list.service';
 import { JwtGuard } from '../auth/guard';
 import { GetUser } from '../auth/decorator';
 import { ListDto } from './dto';
+import { CardService } from '../card/card.service';
 
 @UseGuards(JwtGuard)
 @Controller('list')
 export class ListController {
-  constructor(private listService: ListService) {}
+  constructor(
+    private listService: ListService,
+    private cardService: CardService,
+  ) {}
 
   @Get('boardId/:id')
-  getListsByBoardId(
+  async getListsByBoardId(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) boardId: number,
   ) {
-    return this.listService.getListByBoardId(userId, boardId);
+    const lists = await this.listService.getListByBoardId(userId, boardId);
+    const listsInCards = await Promise.all(
+      lists.map(async (list) => {
+        const cardsList = await this.cardService.getCardsByListId(
+          userId,
+          list.id,
+        );
+        return { list, cards: cardsList };
+      }),
+    );
+
+    return listsInCards;
   }
 
   @Post('boardId/:id')
