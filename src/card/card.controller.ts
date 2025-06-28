@@ -19,7 +19,7 @@ import { CardDto } from './dto';
 export class CardController {
   constructor(private cardService: CardService) {}
 
-  @Get('list/:id')
+  @Get('listId/:id')
   getCardsByListId(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) listId: number,
