@@ -8,6 +8,8 @@ import { ListModule } from './list/list.module';
 import { CardController } from './card/card.controller';
 import { CardService } from './card/card.service';
 import { CardModule } from './card/card.module';
+import { UserAccessService } from './user-access/user-access.service';
+import { UserAccessModule } from './user-access/user-access.module';
 
 @Module({
   imports: [
@@ -18,8 +20,9 @@ import { CardModule } from './card/card.module';
     BoardModule,
     ListModule,
     CardModule,
+    UserAccessModule,
   ],
   controllers: [CardController],
-  providers: [CardService],
+  providers: [CardService, UserAccessService],
 })
 export class AppModule {}

@@ -6,6 +6,7 @@ import { BoardDto } from './dto';
 export class BoardService {
   constructor(private prisma: PrismaService) {}
 
+
   async getBoards(userId: number) {
     return this.prisma.board.findMany({
       where: {

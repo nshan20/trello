@@ -19,6 +19,7 @@ import { BoardService } from './board.service';
 export class BoardController {
   constructor(private boardService: BoardService) {}
 
+
   @Get()
   getBoards(@GetUser('id') userId: number) {
     return this.boardService.getBoards(userId);
@@ -31,7 +32,6 @@ export class BoardController {
   ) {
     return this.boardService.getBoardById(userId, boardId);
   }
-
 
   @Post()
   createBoard(@Body() dto: BoardDto, @GetUser('id') userId: number) {

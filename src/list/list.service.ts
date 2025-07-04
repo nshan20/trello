@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListDto } from './dto';
 
@@ -16,6 +20,17 @@ export class ListService {
   }
 
   async createList(userId: number, boardId: number, dto: ListDto) {
+    const board = await this.prisma.board.findFirst({
+      where: {
+        id: boardId,
+        userId,
+      },
+    });
+
+    if (!board) {
+      throw new NotFoundException('No board');
+    }
+
     return this.prisma.list.create({
       data: {
         userId,
@@ -63,5 +78,4 @@ export class ListService {
       },
     });
   }
-
 }

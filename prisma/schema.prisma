@@ -25,9 +25,11 @@ model User {
   firstName String?
   lastName  String?
 
-  Boards Board[]
+  Boards Board[] // Սեփական տախտակները
   Lists  List[]
   Cards  Card[]
+
+  AccessibleBoards BoardUserAccess[] // Տախտակներ, որոնց մուտք ունի
 
   @@map("users")
 }
@@ -44,7 +46,24 @@ model Board {
 
   Lists List[]
 
+  AccessibleUsers BoardUserAccess[] // Օգտատերեր, որոնք մուտք ունեն այս տախտակին
+
   @@map("boards")
+}
+
+model BoardUserAccess {
+  id          Int  @id @default(autoincrement())
+  adminUserId Int?
+  userId      Int
+  boardId     Int
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  role String @default("editor") // viewer/editor/owner
+
+  @@unique([userId, boardId])
+  @@map("board_user_access")
 }
 
 model List {

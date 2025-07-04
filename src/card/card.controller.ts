@@ -45,10 +45,10 @@ export class CardController {
     return this.cardService.updateList(userId, cartId, dto);
   }
 
-  @Delete('cardId/:id')
+  @Delete('cardId/:cardId')
   deleteCardById(
     @GetUser('id') userId: number,
-    @Param('id', ParseIntPipe) cardId: number,
+    @Param('cardId', ParseIntPipe) cardId: number,
   ) {
     return this.cardService.deleteCardById(userId, cardId);
   }
