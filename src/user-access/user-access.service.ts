@@ -21,7 +21,7 @@ export class UserAccessService {
       return 'error user not found';
     }
 
-    if (user.id !== userId) {
+    if (user.id === userId) {
       return 'error you can`t give yourself access';
     }
 

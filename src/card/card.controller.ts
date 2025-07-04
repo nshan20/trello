@@ -7,12 +7,15 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { CardService } from './card.service';
 import { GetUser } from '../auth/decorator';
 import { CardDto } from './dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtGuard)
 @Controller('card')
@@ -37,12 +40,15 @@ export class CardController {
   }
 
   @Patch('cardId/:id')
+  @UseInterceptors(FileInterceptor('file')) // ✅ ԱՆՀՐԱԺԵՇՏ է ֆայլ ստանալու համար
   updateList(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) cartId: number,
+    @UploadedFile() file: Express.Multer.File,
     @Body() dto: CardDto,
   ) {
-    return this.cardService.updateList(userId, cartId, dto);
+    console.log(file?.buffer);
+    return this.cardService.updateList(userId, cartId, dto, file?.buffer);
   }
 
   @Delete('cardId/:cardId')
@@ -52,4 +58,16 @@ export class CardController {
   ) {
     return this.cardService.deleteCardById(userId, cardId);
   }
+
+  // Controller-ում
+  @Post('upload-image/:cardId')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(
+    @Param('cardId', ParseIntPipe) cardId: number,
+    @UploadedFile() file: any, // կամ file: { buffer: Buffer }
+  ) {
+    console.log(file?.buffer);
+    return this.cardService.addImageToCard(cardId, file.buffer);
+  }
+
 }

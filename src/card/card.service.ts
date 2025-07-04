@@ -27,23 +27,22 @@ export class CardService {
     return cards;
   }
 
-  async updateList(userId: number, cartId: number, dto: CardDto) {
-    const cart = await this.prisma.card.findUnique({
-      where: {
-        id: cartId,
-      },
-    });
+  async updateList(
+    userId: number,
+    cardId: number,
+    dto: CardDto,
+    image?: Buffer,
+  ) {
+    const card = await this.prisma.card.findUnique({ where: { id: cardId } });
 
-    // @ts-ignore
-    if (!cartId || cart.userId !== userId)
-      throw new ForbiddenException(`board with id ${cartId} not found`);
+    if (!card || card.userId !== userId)
+      throw new ForbiddenException(`card with id ${cardId} not found`);
 
     return this.prisma.card.update({
-      where: {
-        id: cartId,
-      },
+      where: { id: cardId },
       data: {
         ...dto,
+        ...(image && { image }), // ✅ image-ը կավելանա միայն եթե կա
       },
     });
   }
@@ -63,6 +62,13 @@ export class CardService {
       where: {
         id: cardId,
       },
+    });
+  }
+
+  async addImageToCard(cardId: number, imageBuffer: Buffer) {
+    return this.prisma.card.update({
+      where: { id: cardId },
+      data: { image: imageBuffer },
     });
   }
 }

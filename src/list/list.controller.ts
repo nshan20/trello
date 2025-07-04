@@ -29,13 +29,23 @@ export class ListController {
     @Param('id', ParseIntPipe) boardId: number,
   ) {
     const lists = await this.listService.getListByBoardId(userId, boardId);
+
     const listsInCards = await Promise.all(
       lists.map(async (list) => {
         const cardsList = await this.cardService.getCardsByListId(
           userId,
           list.id,
         );
-        return { list, cards: cardsList };
+
+        // ✅ Base64 դարձնել image-ները
+        const cardsWithImage = cardsList.map((card) => ({
+          ...card,
+          image: card.image
+            ? `data:image/jpeg;base64,${Buffer.from(card.image).toString('base64')}`
+            : null,
+        }));
+
+        return { list, cards: cardsWithImage };
       }),
     );
 
