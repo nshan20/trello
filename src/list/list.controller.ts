@@ -20,7 +20,6 @@ import { CardService } from '../card/card.service';
 export class ListController {
   constructor(
     private listService: ListService,
-    private cardService: CardService,
   ) {}
 
   @Get('boardId/:id')
@@ -28,28 +27,7 @@ export class ListController {
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) boardId: number,
   ) {
-    const lists = await this.listService.getListByBoardId(userId, boardId);
-
-    const listsInCards = await Promise.all(
-      lists.map(async (list) => {
-        const cardsList = await this.cardService.getCardsByListId(
-          userId,
-          list.id,
-        );
-
-        // ✅ Base64 դարձնել image-ները
-        const cardsWithImage = cardsList.map((card) => ({
-          ...card,
-          image: card.image
-            ? `data:image/jpeg;base64,${Buffer.from(card.image).toString('base64')}`
-            : null,
-        }));
-
-        return { list, cards: cardsWithImage };
-      }),
-    );
-
-    return listsInCards;
+    return this.listService.getListsWithCards(userId, boardId);
   }
 
   @Post('boardId/:id')

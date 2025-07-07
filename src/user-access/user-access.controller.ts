@@ -7,12 +7,15 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { UserAccessService } from './user-access.service';
 import { GetUser } from '../auth/decorator';
 import { ListDto } from '../list/dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtGuard)
 @Controller('user-access')
@@ -80,23 +83,39 @@ export class UserAccessController {
   }
 
   @Post('card/boardId/:boardId/listId/:listId')
+  @UseInterceptors(FileInterceptor('file'))
   async createCardGuest(
     @GetUser('id') userId: number,
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('listId', ParseIntPipe) listId: number,
     @Body() dto: ListDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.userAccessService.createCardGuest(userId, boardId, listId, dto);
+    return this.userAccessService.createCardGuest(
+      userId,
+      boardId,
+      listId,
+      dto,
+      file?.buffer,
+    );
   }
 
   @Patch('card/boardId/:boardId/cardId/:cardId')
+  @UseInterceptors(FileInterceptor('file'))
   async updateCardGuest(
     @GetUser('id') userId: number,
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('cardId', ParseIntPipe) cardId: number,
     @Body() dto: ListDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.userAccessService.updateCardGuest(userId, boardId, cardId, dto);
+    return this.userAccessService.updateCardGuest(
+      userId,
+      boardId,
+      cardId,
+      dto,
+      file?.buffer,
+    );
   }
 
   @Delete('card/cardId/:cardId/boardId/:boardId')

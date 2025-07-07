@@ -5,10 +5,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListDto } from './dto';
+import { CardService } from '../card/card.service';
 
 @Injectable()
 export class ListService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cardService: CardService,
+  ) {}
 
   async getListByBoardId(userId: number, boardId: number) {
     return this.prisma.list.findMany({
@@ -17,6 +21,44 @@ export class ListService {
         boardId,
       },
     });
+  }
+
+  async getListsWithCards(userId: number, boardId: number) {
+    const lists = await this.getListByBoardId(userId, boardId);
+
+    const listsInCards = await Promise.all(
+      lists.map(async (list) => {
+        const cardsList = await this.cardService.getCardsByListId(
+          userId,
+          list.id,
+        );
+
+        const cardsWithImage = cardsList.map((card) => {
+          const rawDate =
+            card.data instanceof Date ? card.data.toISOString() : card.data;
+
+          const formattedDate = rawDate
+            ? (() => {
+                const localDate = new Date(rawDate);
+                const pad = (n: number) => n.toString().padStart(2, '0');
+                return `${localDate.getFullYear()}-${pad(localDate.getMonth() + 1)}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(localDate.getMinutes())}`;
+              })()
+            : null;
+
+          return {
+            ...card,
+            image: card.image
+              ? `data:image/jpeg;base64,${Buffer.from(card.image).toString('base64')}`
+              : null,
+            data: formattedDate,
+          };
+        });
+
+        return { list, cards: cardsWithImage };
+      }),
+    );
+
+    return listsInCards;
   }
 
   async createList(userId: number, boardId: number, dto: ListDto) {

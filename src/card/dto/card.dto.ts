@@ -31,6 +31,10 @@ export class CardDto {
   @IsOptional()
   location?: string;
 
+  @IsString()
+  @IsOptional()
+  deadlineFlag?: string;
+
   @IsDate()
   @IsOptional()
   @Type(() => Date)

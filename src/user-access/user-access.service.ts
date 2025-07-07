@@ -45,28 +45,55 @@ export class UserAccessService {
     });
   }
 
+  getDeadlineFlag(date: string | Date): 'red' | 'orange' | 'white' {
+    const now = Date.now();
+    const deadline = new Date(date).getTime();
+    const diff = deadline - now;
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    if (diff < 0) return 'red';
+    if (diff <= oneDay) return 'orange';
+    return 'white';
+  }
+
+  getFormattedDate(date: string | Date): string {
+    const localDate = new Date(date);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+
+    return `${localDate.getFullYear()}-${pad(localDate.getMonth() + 1)}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(localDate.getMinutes())}`;
+  }
+
+  //7777
   async getBoardListsWithCards(userId: number, boardId: number) {
-    const accessList = await this.prisma.boardUserAccess.findMany({
+    const access = await this.prisma.boardUserAccess.findFirst({
       where: { userId, boardId },
-      select: { boardId: true },
+
     });
 
-    const boardIds = accessList.map((access) => access.boardId);
-
-    if (boardIds.length === 0) {
-      return [];
-    }
+    if (!access) return [];
 
     const lists = await this.prisma.list.findMany({
-      where: {
-        boardId: { in: boardIds },
-      },
-      include: {
-        Cards: true,
-      },
+      where: { boardId },
+      include: { Cards: true },
     });
 
-    return lists;
+    return lists.map((list) => ({
+      ...list,
+      Cards: list.Cards.map((card) => {
+        const rawDate =
+          card.data instanceof Date ? card.data.toISOString() : card.data;
+        const formattedDate = rawDate ? this.getFormattedDate(rawDate) : null;
+
+        return {
+          ...card,
+          image: card.image
+            ? `data:image/jpeg;base64,${Buffer.from(card.image).toString('base64')}`
+            : null,
+          data: formattedDate,
+          deadlineFlag: rawDate ? this.getDeadlineFlag(rawDate) : null,
+        };
+      }),
+    }));
   }
 
   async getBoardsByAccessUser(userId: number) {
@@ -159,6 +186,7 @@ export class UserAccessService {
     boardId: number,
     listId: number,
     dto: CardDto,
+    image?: Buffer,
   ) {
     const accessList = await this.prisma.boardUserAccess.findFirst({
       where: { userId, boardId },
@@ -172,8 +200,13 @@ export class UserAccessService {
       return 'error: adminUserId is null';
     }
 
+    if (dto.data) {
+      dto.deadlineFlag = this.getDeadlineFlag(dto.data);
+    }
+
     const cards = await this.prisma.card.create({
       data: {
+        image,
         userId: accessList.adminUserId,
         listId,
         ...dto,
@@ -187,6 +220,7 @@ export class UserAccessService {
     boardId: number,
     cardId: number,
     dto: CardDto,
+    image?: Buffer,
   ) {
     const accessList = await this.prisma.boardUserAccess.findFirst({
       where: { userId, boardId },
@@ -210,11 +244,16 @@ export class UserAccessService {
     if (!cardId || card.userId !== accessList.adminUserId)
       throw new ForbiddenException(`board with id ${cardId} not found`);
 
+    if (dto.data) {
+      dto.deadlineFlag = this.getDeadlineFlag(dto.data);
+    }
+
     return this.prisma.card.update({
       where: {
         id: cardId,
       },
       data: {
+        image,
         ...dto,
       },
     });
@@ -288,5 +327,4 @@ export class UserAccessService {
       },
     });
   }
-
 }

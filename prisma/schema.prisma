@@ -89,14 +89,16 @@ model Card {
   createAt  DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  title       String?
-  description String?
-  checklist   String?
-  members     String?
-  labels      String?
-  location    String?
-  comments    String?
-  data        DateTime?
+  title        String?
+  description  String?
+  checklist    String?
+  members      String?
+  labels       String?
+  location     String?
+  comments     String?
+  data         DateTime?
+  deadlineFlag String?
+  priority     String?
 
   image Bytes?
 

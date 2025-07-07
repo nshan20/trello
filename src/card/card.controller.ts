@@ -7,20 +7,32 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { JwtGuard } from '../auth/guard';
 import { CardService } from './card.service';
 import { GetUser } from '../auth/decorator';
 import { CardDto } from './dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CardFilterDto } from './dto/cardFilterDto';
 
 @UseGuards(JwtGuard)
 @Controller('card')
 export class CardController {
   constructor(private cardService: CardService) {}
+
+  @Post('getAllCards')
+  getAllCards(
+    @GetUser('id') userId: number,
+    @Body() filterDto: CardFilterDto,
+  ) {
+    return this.cardService.getAllCards(userId, filterDto);
+  }
 
   @Get('listId/:id')
   getCardsByListId(
@@ -31,23 +43,24 @@ export class CardController {
   }
 
   @Post('listId/:id')
+  @UseInterceptors(FileInterceptor('file'))
   createList(
     @Body() dto: CardDto,
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) listId: number,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.cardService.createList(userId, listId, dto);
+    return this.cardService.createList(userId, listId, dto, file?.buffer);
   }
 
   @Patch('cardId/:id')
-  @UseInterceptors(FileInterceptor('file')) // ✅ ԱՆՀՐԱԺԵՇՏ է ֆայլ ստանալու համար
+  @UseInterceptors(FileInterceptor('file'))
   updateList(
     @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) cartId: number,
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: CardDto,
   ) {
-    console.log(file?.buffer);
     return this.cardService.updateList(userId, cartId, dto, file?.buffer);
   }
 
@@ -58,16 +71,4 @@ export class CardController {
   ) {
     return this.cardService.deleteCardById(userId, cardId);
   }
-
-  // Controller-ում
-  @Post('upload-image/:cardId')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(
-    @Param('cardId', ParseIntPipe) cardId: number,
-    @UploadedFile() file: any, // կամ file: { buffer: Buffer }
-  ) {
-    console.log(file?.buffer);
-    return this.cardService.addImageToCard(cardId, file.buffer);
-  }
-
 }

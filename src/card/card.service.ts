@@ -1,10 +1,19 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CardDto } from './dto';
+import { CardFilterDto } from './dto/cardFilterDto';
+import { UserAccessService } from '../user-access/user-access.service';
 
 @Injectable()
 export class CardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private userAccessService: UserAccessService,
+  ) {}
 
   async getCardsByListId(userId: number, listId: number) {
     const cards = await this.prisma.card.findMany({
@@ -16,9 +25,19 @@ export class CardService {
     return cards;
   }
 
-  async createList(userId: number, listId: number, dto: CardDto) {
+  async createList(
+    userId: number,
+    listId: number,
+    dto: CardDto,
+    image?: Buffer,
+  ) {
+    if (dto.data) {
+      dto.deadlineFlag = this.getDeadlineFlag(dto.data);
+    }
+
     const cards = await this.prisma.card.create({
       data: {
+        image,
         userId,
         listId,
         ...dto,
@@ -38,11 +57,15 @@ export class CardService {
     if (!card || card.userId !== userId)
       throw new ForbiddenException(`card with id ${cardId} not found`);
 
+    if (dto.data) {
+      dto.deadlineFlag = this.getDeadlineFlag(dto.data);
+    }
+
     return this.prisma.card.update({
       where: { id: cardId },
       data: {
         ...dto,
-        ...(image && { image }), // ✅ image-ը կավելանա միայն եթե կա
+        ...(image && { image }),
       },
     });
   }
@@ -65,10 +88,86 @@ export class CardService {
     });
   }
 
-  async addImageToCard(cardId: number, imageBuffer: Buffer) {
-    return this.prisma.card.update({
-      where: { id: cardId },
-      data: { image: imageBuffer },
-    });
+  getDeadlineFlag(dateString: Date): 'red' | 'yellow' | 'white' {
+    const now = new Date().getTime();
+    const deadline = new Date(dateString).getTime();
+    const diff = deadline - now;
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    if (diff < 0) return 'red';
+    else if (diff <= oneDay) return 'yellow';
+    else return 'white';
   }
+
+  async getAllCards(userId: number, filterDto: CardFilterDto = {}) {
+    const { search, priority, deadlineFlag, page = 1, limit = 10 } = filterDto;
+
+    const where: any = { userId };
+
+    if (priority?.trim()) {
+      where.priority = priority;
+    }
+
+    if (['red', 'yellow', 'white'].includes(<string>deadlineFlag)) {
+      where.deadlineFlag = deadlineFlag;
+    }
+
+    if (search?.trim()) {
+      where.title = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    const [cards, total] = await Promise.all([
+      this.prisma.card.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createAt: 'desc' },
+        include: {
+          list: {
+            include: {
+              board: {
+                include: {
+                  AccessibleUsers: {
+                    include: {
+                      user: {
+                        select: { email: true },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.card.count({ where }),
+    ]);
+
+    const data = cards.map((card) => {
+      const access = card.list.board.AccessibleUsers.map((a) => ({
+        email: a.user.email,
+        grantedBy: a.adminUserId,
+        role: a.role,
+      }));
+
+      return {
+        card: {
+          ...card,
+        },
+        access,
+      };
+    });
+
+    return {
+      data,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
+
+
 }
