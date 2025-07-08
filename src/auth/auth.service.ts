@@ -55,7 +55,7 @@ export class AuthService {
     return this.singToken(user.id, user.email);
   }
 
-  //jwt-token
+
   async singToken(
     userId: number,
     email: string,

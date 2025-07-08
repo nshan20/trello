@@ -63,7 +63,6 @@ export class UserAccessService {
     return `${localDate.getFullYear()}-${pad(localDate.getMonth() + 1)}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(localDate.getMinutes())}`;
   }
 
-  //7777
   async getBoardListsWithCards(userId: number, boardId: number) {
     const access = await this.prisma.boardUserAccess.findFirst({
       where: { userId, boardId },
