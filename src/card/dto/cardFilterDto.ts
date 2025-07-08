@@ -28,6 +28,10 @@ export class CardFilterDto {
   deadlineFlag?: string;
 
   @IsOptional()
+  @IsString()
+  access?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(0)

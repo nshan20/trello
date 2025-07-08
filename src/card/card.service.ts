@@ -100,9 +100,32 @@ export class CardService {
   }
 
   async getAllCards(userId: number, filterDto: CardFilterDto = {}) {
-    const { search, priority, deadlineFlag, page = 1, limit = 10 } = filterDto;
+    const {
+      search,
+      priority,
+      deadlineFlag,
+      access,
+      page = 1,
+      limit = 10,
+    } = filterDto;
 
-    const where: any = { userId };
+    let where: any;
+
+    if (access === 'access') {
+      where = {
+        list: {
+          board: {
+            AccessibleUsers: {
+              some: {
+                adminUserId: userId,
+              },
+            },
+          },
+        },
+      };
+    } else {
+      where = { userId };
+    }
 
     if (priority?.trim()) {
       where.priority = priority;
@@ -119,6 +142,7 @@ export class CardService {
       };
     }
 
+    // Prisma query:
     const [cards, total] = await Promise.all([
       this.prisma.card.findMany({
         where,
@@ -132,9 +156,7 @@ export class CardService {
                 include: {
                   AccessibleUsers: {
                     include: {
-                      user: {
-                        select: { email: true },
-                      },
+                      user: { select: { email: true } },
                     },
                   },
                 },
@@ -153,12 +175,7 @@ export class CardService {
         role: a.role,
       }));
 
-      return {
-        card: {
-          ...card,
-        },
-        access,
-      };
+      return { card, access };
     });
 
     return {
@@ -168,6 +185,4 @@ export class CardService {
       lastPage: Math.ceil(total / limit),
     };
   }
-
-
 }
