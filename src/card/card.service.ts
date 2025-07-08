@@ -142,7 +142,6 @@ export class CardService {
       };
     }
 
-    // Prisma query:
     const [cards, total] = await Promise.all([
       this.prisma.card.findMany({
         where,
