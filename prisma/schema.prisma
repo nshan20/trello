@@ -22,8 +22,9 @@ model User {
   email String @unique
   hash  String
 
-  firstName String?
-  lastName  String?
+  firstName          String?
+  lastName           String?
+  hashedRefreshToken String?
 
   Boards Board[]
   Lists  List[]
