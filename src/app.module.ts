@@ -10,6 +10,7 @@ import { CardService } from './card/card.service';
 import { CardModule } from './card/card.module';
 import { UserAccessService } from './user-access/user-access.service';
 import { UserAccessModule } from './user-access/user-access.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UserAccessModule } from './user-access/user-access.module';
     ListModule,
     CardModule,
     UserAccessModule,
+    MailModule,
   ],
   controllers: [CardController],
   providers: [CardService, UserAccessService],

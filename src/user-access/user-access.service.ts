@@ -1,45 +1,38 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListDto } from '../list/dto';
-import { UserAccessDto } from './dto';
 import { CardDto } from '../card/dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UserAccessService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mailService: MailService,
+  ) {}
 
   async createAccessUserByEmail(
     email: string,
     boardId: number,
     userId: number,
   ) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await this.prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
-      return 'error user not found';
-    }
-
-    if (user.id === userId) {
-      return 'error you can`t give yourself access';
-    }
+    if (!user) return 'error user not found';
+    if (user.id === userId) return 'error you can`t give yourself access';
 
     const board = await this.prisma.board.findFirst({
-      where: {
-        userId,
-        id: boardId,
-      },
+      where: { userId, id: boardId },
     });
 
-    if (!board) {
-      return 'error board not found';
-    }
+    if (!board) return 'error board not found';
+
+    await this.mailService.sendBoardAccessEmail(email);
 
     return this.prisma.boardUserAccess.create({
       data: {
         userId: user.id,
-        boardId: boardId,
+        boardId,
         adminUserId: userId,
       },
     });
@@ -66,7 +59,6 @@ export class UserAccessService {
   async getBoardListsWithCards(userId: number, boardId: number) {
     const access = await this.prisma.boardUserAccess.findFirst({
       where: { userId, boardId },
-
     });
 
     if (!access) return [];
